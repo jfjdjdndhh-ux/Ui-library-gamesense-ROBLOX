@@ -280,4 +280,5 @@ function Library:CreateWindow(title)
     return Window
 end
 
+_G.Library = Library
 return Library
