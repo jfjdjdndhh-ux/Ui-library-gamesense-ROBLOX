@@ -1,5 +1,5 @@
-local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
@@ -15,15 +15,14 @@ local function renderObject(className, properties)
     return obj
 end
 
-function Library:CreateWindow(title)
+function Library:CreateWindow(hubName)
     local Window = {
         Tabs = {},
-        Pages = {},
         FirstTab = true
     }
 
     local ScreenGui = renderObject("ScreenGui", {
-        Name = "Gamesense_Dynamic_Library",
+        Name = "SkeetMenu_Seamless_PuppyWare",
         Parent = CoreGui or LocalPlayer:WaitForChild("PlayerGui"),
         ResetOnSpawn = false
     })
@@ -31,8 +30,8 @@ function Library:CreateWindow(title)
     -- Главное окно
     local MainFrame = renderObject("Frame", {
         Name = "MainFrame",
-        Size = UDim2.new(0, 550, 0, 400),
-        Position = UDim2.new(0.5, -275, 0.5, -200),
+        Size = UDim2.new(0, 560, 0, 420),
+        Position = UDim2.new(0.5, -280, 0.5, -210),
         BackgroundColor3 = Color3.fromRGB(17, 17, 17),
         BorderSizePixel = 1,
         BorderColor3 = Color3.fromRGB(10, 10, 10),
@@ -40,10 +39,16 @@ function Library:CreateWindow(title)
         Parent = ScreenGui
     })
 
-    -- Верхняя цветная линия (Gamesense стиль)
+    local UIScale = renderObject("UIScale", {
+        Scale = 0.85,
+        Parent = MainFrame
+    })
+
+    -- Верхняя неоновая линия Skeet
     local GlowBar = renderObject("Frame", {
         Size = UDim2.new(1, 0, 0, 3),
         BorderSizePixel = 0,
+        ZIndex = 5,
         Parent = MainFrame
     })
     renderObject("UIGradient", {
@@ -55,7 +60,7 @@ function Library:CreateWindow(title)
         Parent = GlowBar
     })
 
-    -- Перетаскивание меню
+    -- Драг окна за любую точку
     local dragToggle, dragStart, startPos = false, nil, nil
     MainFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -78,25 +83,47 @@ function Library:CreateWindow(title)
 
     -- Сайдбар для табов
     local Sidebar = renderObject("Frame", {
-        Size = UDim2.new(0, 80, 1, -3),
+        Size = UDim2.new(0, 74, 1, -3),
         Position = UDim2.new(0, 0, 0, 3),
         BackgroundColor3 = Color3.fromRGB(12, 12, 12),
         BorderSizePixel = 0,
+        ZIndex = 2,
         Parent = MainFrame
     })
     renderObject("UIListLayout", {
         SortOrder = Enum.SortOrder.LayoutOrder,
         HorizontalAlignment = Enum.HorizontalAlignment.Center,
+        VerticalAlignment = Enum.VerticalAlignment.Top,
         Parent = Sidebar
     })
 
-    -- Контейнер для страниц
-    local Container = renderObject("Frame", {
-        Size = UDim2.new(1, -81, 1, -3),
-        Position = UDim2.new(0, 81, 0, 3),
-        BackgroundColor3 = Color3.fromRGB(17, 17, 17),
+    -- Разделитель
+    renderObject("Frame", {
+        Size = UDim2.new(0, 1, 1, -3),
+        Position = UDim2.new(0, 74, 0, 3),
+        BackgroundColor3 = Color3.fromRGB(40, 40, 40),
         BorderSizePixel = 0,
         Parent = MainFrame
+    })
+
+    -- Основной контейнер страниц
+    local Container = renderObject("Frame", {
+        Size = UDim2.new(1, -75, 1, -3),
+        Position = UDim2.new(0, 75, 0, 3),
+        BackgroundColor3 = Color3.fromRGB(17, 17, 17),
+        Parent = MainFrame
+    })
+
+    -- Пиксельная сетка на фоне
+    renderObject("ImageLabel", {
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 1,
+        Image = "rbxassetid://8509210785",
+        ImageColor3 = Color3.fromRGB(15, 15, 15),
+        ScaleType = Enum.ScaleType.Tile,
+        TileSize = UDim2.new(0, 8, 0, 8),
+        ZIndex = 0,
+        Parent = Container
     })
 
     function Window:CreateTab(tabName, iconId)
@@ -104,84 +131,116 @@ function Library:CreateWindow(title)
         local isDefault = Window.FirstTab
         Window.FirstTab = false
 
-        local TabButton = renderObject("TextButton", {
-            Size = UDim2.new(1, 0, 0, 40),
-            BackgroundColor3 = isDefault and Color3.fromRGB(17, 17, 17) or Color3.fromRGB(12, 12, 12),
-            Text = tabName,
-            TextColor3 = isDefault and Color3.fromRGB(160, 200, 50) or Color3.fromRGB(150, 150, 150),
-            Font = Enum.Font.Code,
-            TextSize = 12,
+        -- Кнопка вкладки в сайдбаре
+        local Page_Tab = renderObject("Frame", {
+            Size = isDefault and UDim2.new(0, 75, 0, 55) or UDim2.new(0, 74, 0, 55),
             BorderSizePixel = 0,
+            BackgroundColor3 = isDefault and Color3.fromRGB(17, 17, 17) or Color3.fromRGB(12, 12, 12),
+            ClipsDescendants = true,
             Parent = Sidebar
         })
 
+        local Pattern = renderObject("ImageLabel", {
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundTransparency = 1,
+            Image = "rbxassetid://8509210785",
+            ImageColor3 = Color3.fromRGB(14, 14, 14),
+            ScaleType = Enum.ScaleType.Tile,
+            TileSize = UDim2.new(0, 8, 0, 8),
+            Visible = isDefault,
+            ZIndex = 1,
+            Parent = Page_Tab
+        })
+
+        local Page_Tab_Image = renderObject("ImageLabel", {
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            Size = UDim2.new(0, 38, 0, 38),
+            Position = UDim2.new(0, 37, 0.5, 0),
+            BackgroundTransparency = 1,
+            Image = iconId or "rbxassetid://8547236654",
+            ImageColor3 = isDefault and Color3.fromRGB(160, 200, 50) or Color3.fromRGB(80, 80, 80),
+            ZIndex = 2,
+            Parent = Page_Tab
+        })
+
+        local Page_Tab_Button = renderObject("TextButton", {
+            Size = UDim2.new(0, 74, 1, 0),
+            BackgroundTransparency = 1,
+            Text = "",
+            ZIndex = 3,
+            Parent = Page_Tab
+        })
+
+        -- Сама страница элементов
         local Page = renderObject("Frame", {
             Size = UDim2.new(1, 0, 1, 0),
             BackgroundTransparency = 1,
             Visible = isDefault,
+            ZIndex = 2,
             Parent = Container
         })
 
-        Window.Tabs[tabName] = {Button = TabButton, Page = Page}
+        Window.Tabs[tabName] = {Frame = Page_Tab, Icon = Page_Tab_Image, Pattern = Pattern, Page = Page}
 
-        TabButton.MouseButton1Click:Connect(function()
+        Page_Tab_Button.MouseButton1Click:Connect(function()
             for _, t in pairs(Window.Tabs) do
                 t.Page.Visible = false
-                t.Button.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
-                t.Button.TextColor3 = Color3.fromRGB(150, 150, 150)
+                t.Frame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+                t.Frame.Size = UDim2.new(0, 74, 0, 55)
+                t.Icon.ImageColor3 = Color3.fromRGB(80, 80, 80)
+                t.Pattern.Visible = false
             end
             Page.Visible = true
-            TabButton.BackgroundColor3 = Color3.fromRGB(17, 17, 17)
-            TabButton.TextColor3 = Color3.fromRGB(160, 200, 50)
+            Page_Tab.BackgroundColor3 = Color3.fromRGB(17, 17, 17)
+            Page_Tab.Size = UDim2.new(0, 75, 0, 55)
+            Page_Tab_Image.ImageColor3 = Color3.fromRGB(160, 200, 50)
+            Pattern.Visible = true
         end)
 
         function TabObj:CreateSection(sectionName, side)
             local SectionObj = {}
-            local sidePos = (side == "Right") and UDim2.new(0.5, 5, 0, 10) or UDim2.new(0, 5, 0, 10)
+            local isRight = (side == "Right")
+            local pos = isRight and UDim2.new(0.5, 4, 0, 10) or UDim2.new(0, 8, 0, 10)
 
-            local SectionFrame = renderObject("Frame", {
-                Size = UDim2.new(0.5, -10, 1, -20),
-                Position = sidePos,
-                BackgroundColor3 = Color3.fromRGB(22, 22, 22),
+            local Section = renderObject("ScrollingFrame", {
+                Size = UDim2.new(0.5, -12, 1, -20),
+                Position = pos,
+                BackgroundColor3 = Color3.fromRGB(21, 21, 21),
                 BorderColor3 = Color3.fromRGB(35, 35, 35),
                 BorderSizePixel = 1,
+                ScrollBarThickness = 0,
+                CanvasSize = UDim2.new(0, 0, 0, 0),
+                AutomaticCanvasSize = Enum.AutomaticSize.Y,
+                ZIndex = 2,
                 Parent = Page
             })
 
-            local TitleLabel = renderObject("TextLabel", {
+            renderObject("TextLabel", {
                 Size = UDim2.new(1, 0, 0, 18),
                 BackgroundTransparency = 1,
-                Text = "  " .. sectionName:upper(),
-                TextColor3 = Color3.fromRGB(220, 220, 220),
+                Text = "<b>  " .. sectionName:upper() .. "</b>",
+                TextColor3 = Color3.fromRGB(230, 230, 230),
                 Font = Enum.Font.Code,
                 TextSize = 10,
+                RichText = true,
                 TextXAlignment = Enum.TextXAlignment.Left,
-                Parent = SectionFrame
+                ZIndex = 3,
+                Parent = Section
             })
 
-            local ContainerList = renderObject("UIListLayout", {
+            renderObject("UIListLayout", {
+                Padding = UDim.new(0, 5),
                 SortOrder = Enum.SortOrder.LayoutOrder,
-                Padding = UDim.new(0, 6),
-                Parent = SectionFrame
-            })
-            renderObject("UIPadding", {
-                PaddingTop = UDim.new(0, 22),
-                PaddingLeft = UDim.new(0, 8),
-                PaddingRight = UDim.new(0, 8),
-                Parent = SectionFrame
+                Parent = Section
             })
 
             function SectionObj:CreateButton(text, callback)
+                local BtnFrame = renderObject("Frame", { Size = UDim2.new(1, 0, 0, 24), BackgroundTransparency = 1, Parent = Section })
                 local Btn = renderObject("TextButton", {
-                    Size = UDim2.new(1, 0, 0, 22),
-                    BackgroundColor3 = Color3.fromRGB(28, 28, 28),
-                    BorderColor3 = Color3.fromRGB(45, 45, 45),
-                    BorderSizePixel = 1,
-                    Text = text,
-                    TextColor3 = Color3.fromRGB(200, 200, 200),
-                    Font = Enum.Font.Code,
-                    TextSize = 11,
-                    Parent = SectionFrame
+                    Size = UDim2.new(1, -16, 0, 18), Position = UDim2.new(0, 8, 0, 3),
+                    BackgroundColor3 = Color3.fromRGB(28, 28, 28), BorderColor3 = Color3.fromRGB(45, 45, 45),
+                    BorderSizePixel = 1, Text = text, TextColor3 = Color3.fromRGB(200, 200, 200),
+                    Font = Enum.Font.Code, TextSize = 11, ZIndex = 4, Parent = BtnFrame
                 })
                 Btn.MouseButton1Click:Connect(function()
                     if callback then callback() end
@@ -189,77 +248,83 @@ function Library:CreateWindow(title)
             end
 
             function SectionObj:CreateToggle(text, default, callback)
-                local ToggleFrame = renderObject("Frame", {
-                    Size = UDim2.new(1, 0, 0, 16),
-                    BackgroundTransparency = 1,
-                    Parent = SectionFrame
-                })
+                local Frame = renderObject("Frame", { Size = UDim2.new(1, 0, 0, 20), BackgroundTransparency = 1, Parent = Section })
                 local Box = renderObject("TextButton", {
-                    Size = UDim2.new(0, 10, 0, 10),
-                    Position = UDim2.new(0, 0, 0.5, -5),
-                    BackgroundColor3 = default and Color3.fromRGB(160, 200, 50) or Color3.fromRGB(28, 28, 28),
-                    BorderColor3 = Color3.fromRGB(45, 45, 45),
-                    BorderSizePixel = 1,
-                    Text = "",
-                    Parent = ToggleFrame
+                    Size = UDim2.new(0, 10, 0, 10), Position = UDim2.new(0, 8, 0.5, -5),
+                    BackgroundColor3 = default and Color3.fromRGB(160, 200, 50) or Color3.fromRGB(26, 26, 26),
+                    BorderSizePixel = 1, BorderColor3 = Color3.fromRGB(45, 45, 45), Text = "", AutoButtonColor = false, ZIndex = 4, Parent = Frame
                 })
                 renderObject("TextLabel", {
-                    Size = UDim2.new(1, -16, 1, 0),
-                    Position = UDim2.new(0, 16, 0, 0),
-                    BackgroundTransparency = 1,
-                    Text = text,
-                    TextColor3 = Color3.fromRGB(200, 200, 200),
-                    Font = Enum.Font.Code,
-                    TextSize = 11,
-                    TextXAlignment = Enum.TextXAlignment.Left,
-                    Parent = ToggleFrame
+                    Size = UDim2.new(1, -26, 1, 0), Position = UDim2.new(0, 26, 0, 0), BackgroundTransparency = 1,
+                    Text = text, TextColor3 = Color3.fromRGB(195, 195, 195), Font = Enum.Font.Code, TextSize = 11,
+                    TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4, Parent = Frame
                 })
-
-                local active = default or false
                 Box.MouseButton1Click:Connect(function()
-                    active = not active
-                    Box.BackgroundColor3 = active and Color3.fromRGB(160, 200, 50) or Color3.fromRGB(28, 28, 28)
-                    if callback then callback(active) end
+                    local enabled = not (Box.BackgroundColor3 == Color3.fromRGB(160, 200, 50))
+                    Box.BackgroundColor3 = enabled and Color3.fromRGB(160, 200, 50) or Color3.fromRGB(26, 26, 26)
+                    callback(enabled)
                 end)
             end
 
-            function SectionObj:CreateDropdown(text, options, defaultIdx, callback)
-                local DropdownFrame = renderObject("Frame", {
-                    Size = UDim2.new(1, 0, 0, 32),
-                    BackgroundTransparency = 1,
-                    Parent = SectionFrame
+            function SectionObj:CreateSlider(text, min, max, default, callback)
+                local Frame = renderObject("Frame", { Size = UDim2.new(1, 0, 0, 30), BackgroundTransparency = 1, Parent = Section })
+                local Label = renderObject("TextLabel", {
+                    Size = UDim2.new(1, -12, 0, 14), Position = UDim2.new(0, 8, 0, 0), BackgroundTransparency = 1,
+                    Text = text .. ": " .. tostring(default), TextColor3 = Color3.fromRGB(195, 195, 195), Font = Enum.Font.Code, TextSize = 11,
+                    TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4, Parent = Frame
                 })
+                local SliderBG = renderObject("TextButton", {
+                    Size = UDim2.new(1, -16, 0, 5), Position = UDim2.new(0, 8, 0, 16), BackgroundColor3 = Color3.fromRGB(26, 26, 26),
+                    BorderSizePixel = 1, BorderColor3 = Color3.fromRGB(45, 45, 45), Text = "", AutoButtonColor = false, ZIndex = 4, Parent = Frame
+                })
+                local SliderFill = renderObject("Frame", {
+                    Size = UDim2.new((default - min) / (max - min), 0, 1, 0), BackgroundColor3 = Color3.fromRGB(160, 200, 50),
+                    BorderSizePixel = 0, ZIndex = 5, Parent = SliderBG
+                })
+                local sliding = false
+                local function updateSlider(input)
+                    local absPos = SliderBG.AbsolutePosition.X
+                    local absSize = SliderBG.AbsoluteSize.X
+                    local mousePos = input.Position.X
+                    local percentage = math.clamp((mousePos - absPos) / absSize, 0, 1)
+                    SliderFill.Size = UDim2.new(percentage, 0, 1, 0)
+                    local value = math.round(min + (max - min) * percentage)
+                    Label.Text = text .. ": " .. tostring(value)
+                    callback(value)
+                end
+                SliderBG.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        sliding = true
+                        updateSlider(input)
+                    end
+                end)
+                UserInputService.InputChanged:Connect(function(input)
+                    if sliding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                        updateSlider(input)
+                    end
+                end)
+                UserInputService.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then sliding = false end
+                end)
+            end
+
+            function SectionObj:CreateDropdown(text, options, default, callback)
+                local Frame = renderObject("Frame", { Size = UDim2.new(1, 0, 0, 36), BackgroundTransparency = 1, Parent = Section })
                 renderObject("TextLabel", {
-                    Size = UDim2.new(1, 0, 0, 12),
-                    BackgroundTransparency = 1,
-                    Text = text,
-                    TextColor3 = Color3.fromRGB(140, 140, 140),
-                    Font = Enum.Font.Code,
-                    TextSize = 10,
-                    TextXAlignment = Enum.TextXAlignment.Left,
-                    Parent = DropdownFrame
+                    Size = UDim2.new(1, -12, 0, 14), Position = UDim2.new(0, 8, 0, 0), BackgroundTransparency = 1,
+                    Text = text, TextColor3 = Color3.fromRGB(195, 195, 195), Font = Enum.Font.Code, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, Parent = Frame
                 })
-
-                local idx = defaultIdx or 1
-                local DBtn = renderObject("TextButton", {
-                    Size = UDim2.new(1, 0, 0, 18),
-                    Position = UDim2.new(0, 0, 0, 14),
-                    BackgroundColor3 = Color3.fromRGB(28, 28, 28),
-                    BorderColor3 = Color3.fromRGB(45, 45, 45),
-                    BorderSizePixel = 1,
-                    Text = "  " .. tostring(options[idx]),
-                    TextColor3 = Color3.fromRGB(200, 200, 200),
-                    Font = Enum.Font.Code,
-                    TextSize = 11,
-                    TextXAlignment = Enum.TextXAlignment.Left,
-                    Parent = DropdownFrame
+                local DropdownBtn = renderObject("TextButton", {
+                    Size = UDim2.new(1, -16, 0, 16), Position = UDim2.new(0, 8, 0, 15), BackgroundColor3 = Color3.fromRGB(28, 28, 28),
+                    BorderColor3 = Color3.fromRGB(45, 45, 45), BorderSizePixel = 1, Font = Enum.Font.Code, Text = "  " .. options[default or 1],
+                    TextColor3 = Color3.fromRGB(180, 180, 180), TextSize = 10, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4, Parent = Frame
                 })
-
-                DBtn.MouseButton1Click:Connect(function()
-                    idx = idx + 1
-                    if idx > #options then idx = 1 end
-                    DBtn.Text = "  " .. tostring(options[idx])
-                    if callback then callback(options[idx]) end
+                local currentIdx = default or 1
+                DropdownBtn.MouseButton1Click:Connect(function()
+                    currentIdx = currentIdx + 1
+                    if currentIdx > #options then currentIdx = 1 end
+                    DropdownBtn.Text = "  " .. options[currentIdx]
+                    callback(options[currentIdx])
                 end)
             end
 
