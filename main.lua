@@ -1,10 +1,10 @@
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
 
 local Library = {}
 
--[span_3](start_span)- Вспомогательная функция для создания объектов[span_3](end_span)
 local function renderObject(className, properties)
     local obj = Instance.new(className)
     if properties then
@@ -16,22 +16,27 @@ local function renderObject(className, properties)
 end
 
 function Library:CreateWindow(title)
-    local Window = {}
-    
+    local Window = {
+        Tabs = {},
+        Pages = {},
+        FirstTab = true
+    }
+
     local ScreenGui = renderObject("ScreenGui", {
-        Name = title or "Gamesense_Library",
-        Parent = CoreGui or Players.LocalPlayer:WaitForChild("PlayerGui"),
+        Name = "Gamesense_Library_Dynamic",
+        Parent = CoreGui or LocalPlayer:WaitForChild("PlayerGui"),
         ResetOnSpawn = false
     })
 
-    -[span_4](start_span)- Плавающая кнопка открытия[span_4](end_span)
+    -- Плавающая кнопка переключения видимости меню
     local ToggleButton = renderObject("ImageButton", {
-        Name = "ToggleButton", Size = UDim2.new(0, 50, 0, 50), Position = UDim2.new(0.05, 0, 0.1, 0),
+        Name = "GamesenseToggleButton", Size = UDim2.new(0, 50, 0, 50), Position = UDim2.new(0.05, 0, 0.1, 0),
         BackgroundColor3 = Color3.fromRGB(16, 16, 16), BorderColor3 = Color3.fromRGB(45, 45, 45),
         BorderSizePixel = 1, Image = "rbxassetid://113169443526288", ZIndex = 10, Parent = ScreenGui
     })
     renderObject("UICorner", { CornerRadius = UDim.new(0, 6), Parent = ToggleButton })
 
+    -- Перетаскивание круглой плавающей кнопки (ПК + Телефон)
     local btnDragging, btnDragStart, btnStartPos
     ToggleButton.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -48,16 +53,18 @@ function Library:CreateWindow(title)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then btnDragging = false end
     end)
 
-    -[span_5](start_span)- Главное окно[span_5](end_span)
+    -- Главное окно
     local MainFrame = renderObject("Frame", {
         Name = "MainFrame", Size = UDim2.new(0, 560, 0, 420), Position = UDim2.new(0.5, -280, 0.5, -210),
         BackgroundColor3 = Color3.fromRGB(17, 17, 17), BorderSizePixel = 1, BorderColor3 = Color3.fromRGB(10, 10, 10),
         Active = true, Visible = false, Parent = ScreenGui
     })
-    
+
     ToggleButton.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
 
-    -[span_6](start_span)- Градиентная линия[span_6](end_span)
+    renderObject("UIScale", { Scale = 0.85, Parent = MainFrame })
+
+    -- Неоновый градиент сверху окна
     local GlowBar = renderObject("Frame", { Size = UDim2.new(1, 0, 0, 3), BorderSizePixel = 0, ZIndex = 5, Parent = MainFrame })
     renderObject("UIGradient", {
         Color = ColorSequence.new({
@@ -72,16 +79,16 @@ function Library:CreateWindow(title)
         BorderSizePixel = 1, BorderColor3 = Color3.fromRGB(45, 45, 45), ZIndex = 4, Parent = MainFrame
     })
 
-    -[span_7](start_span)- Сайдбар и Контейнер[span_7](end_span)
+    -- Контейнер для вкладок (Сайдбар)
     local Sidebar = renderObject("Frame", { Size = UDim2.new(0, 74, 1, -3), Position = UDim2.new(0, 0, 0, 3), BackgroundColor3 = Color3.fromRGB(12, 12, 12), BorderSizePixel = 0, ZIndex = 2, Parent = MainFrame })
-    local SidebarLayout = renderObject("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center, VerticalAlignment = Enum.VerticalAlignment.Top, Parent = Sidebar })
-    
+    renderObject("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center, VerticalAlignment = Enum.VerticalAlignment.Top, Parent = Sidebar })
     renderObject("Frame", { Size = UDim2.new(0, 1, 1, -3), Position = UDim2.new(0, 74, 0, 3), BackgroundColor3 = Color3.fromRGB(40, 40, 40), BorderSizePixel = 0, Parent = MainFrame })
     
+    -- Главная область контента
     local Container = renderObject("Frame", { Size = UDim2.new(1, -75, 1, -3), Position = UDim2.new(0, 75, 0, 3), BackgroundColor3 = Color3.fromRGB(17, 17, 17), Parent = MainFrame })
     renderObject("ImageLabel", { Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, Image = "rbxassetid://8509210785", ImageColor3 = Color3.fromRGB(15, 15, 15), ScaleType = Enum.ScaleType.Tile, TileSize = UDim2.new(0, 8, 0, 8), ZIndex = 0, Parent = Container })
 
-    -[span_8](start_span)- Драг окна[span_8](end_span)
+    -- Перетаскивание меню (ПК + Телефон)
     local dragToggle, dragStart, startPos = false, nil, nil
     MainFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -98,14 +105,10 @@ function Library:CreateWindow(title)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragToggle = false end
     end)
 
-    Window.Pages = {}
-    Window.TabFrames = {}
-    Window.FirstTab = true
-
     function Window:CreateTab(name, iconId)
         local TabObj = {}
-        local isDefault = self.FirstTab
-        self.FirstTab = false
+        local isDefault = Window.FirstTab
+        Window.FirstTab = false
 
         local Page_Tab = renderObject("Frame", {
             Size = isDefault and UDim2.new(0, 75, 0, 55) or UDim2.new(0, 74, 0, 55), BorderSizePixel = 0,
@@ -123,12 +126,12 @@ function Library:CreateWindow(title)
         
         local Page = renderObject("Frame", { Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, Visible = isDefault, ZIndex = 2, Parent = Container })
         
-        self.Pages[name] = Page
-        self.TabFrames[name] = {Frame = Page_Tab, Icon = Page_Tab_Image, Pattern = Pattern}
+        Window.Pages[name] = Page
+        Window.Tabs[name] = {Frame = Page_Tab, Icon = Page_Tab_Image, Pattern = Pattern}
 
         Page_Tab_Button.MouseButton1Click:Connect(function()
-            for n, t in pairs(self.TabFrames) do
-                self.Pages[n].Visible = false
+            for n, t in pairs(Window.Tabs) do
+                Window.Pages[n].Visible = false
                 t.Frame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
                 t.Frame.Size = UDim2.new(0, 74, 0, 55) 
                 t.Icon.ImageColor3 = Color3.fromRGB(80, 80, 80)
@@ -147,7 +150,7 @@ function Library:CreateWindow(title)
             
             local Section = renderObject("ScrollingFrame", {
                 Size = UDim2.new(0.5, -12, 1, -20), Position = pos, BackgroundColor3 = Color3.fromRGB(21, 21, 21),
-                BorderColor3 = Color3.fromRGB(35, 35, 35), BorderSizePixel = 1, ScrollBarThickness = 2,
+                BorderColor3 = Color3.fromRGB(35, 35, 35), BorderSizePixel = 1, ScrollBarThickness = 0,
                 CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y, ZIndex = 2, Parent = Page
             })
             renderObject("TextLabel", {
@@ -157,9 +160,8 @@ function Library:CreateWindow(title)
             })
             renderObject("UIListLayout", { Padding = UDim.new(0, 5), SortOrder = Enum.SortOrder.LayoutOrder, Parent = Section })
 
-            -- ================= Обычная кнопка =================
             function SectionObj:CreateButton(text, callback)
-                local Frame = renderObject("Frame", { Size = UDim2.new(1, -16, 0, 25), Position = UDim2.new(0, 8, 0, 0), BackgroundTransparency = 1, Parent = Section })
+                local Frame = renderObject("Frame", { Size = UDim2.new(1, -16, 0, 25), BackgroundTransparency = 1, Parent = Section })
                 local Btn = renderObject("TextButton", {
                     Size = UDim2.new(1, 0, 1, 0), BackgroundColor3 = Color3.fromRGB(26, 26, 26),
                     BorderSizePixel = 1, BorderColor3 = Color3.fromRGB(45, 45, 45), Text = text,
@@ -168,7 +170,6 @@ function Library:CreateWindow(title)
                 Btn.MouseButton1Click:Connect(function() if callback then callback() end end)
             end
 
-            -- ================= Чекбокс (Toggle) =================
             function SectionObj:CreateToggle(text, default, callback)
                 local Frame = renderObject("Frame", { Size = UDim2.new(1, 0, 0, 20), BackgroundTransparency = 1, Parent = Section })
                 local Box = renderObject("TextButton", {
@@ -188,7 +189,6 @@ function Library:CreateWindow(title)
                 end)
             end
 
-            -- ================= Слайдер =================
             function SectionObj:CreateSlider(text, min, max, default, callback)
                 local Frame = renderObject("Frame", { Size = UDim2.new(1, 0, 0, 30), BackgroundTransparency = 1, Parent = Section })
                 local Label = renderObject("TextLabel", {
@@ -227,7 +227,6 @@ function Library:CreateWindow(title)
                 end)
             end
 
-            -- ================= Выпадающий список =================
             function SectionObj:CreateDropdown(text, options, defaultIdx, callback)
                 local Frame = renderObject("Frame", { Size = UDim2.new(1, 0, 0, 36), BackgroundTransparency = 1, Parent = Section })
                 renderObject("TextLabel", {
@@ -248,37 +247,11 @@ function Library:CreateWindow(title)
                 end)
             end
 
-            -- ================= Колор пикер (Простой RGB) =================
-            function SectionObj:CreateColorPicker(text, defaultColor, callback)
-                local Frame = renderObject("Frame", { Size = UDim2.new(1, 0, 0, 20), BackgroundTransparency = 1, Parent = Section })
-                renderObject("TextLabel", {
-                    Size = UDim2.new(1, -30, 1, 0), Position = UDim2.new(0, 8, 0, 0), BackgroundTransparency = 1,
-                    Text = text, TextColor3 = Color3.fromRGB(195, 195, 195), Font = Enum.Font.Code, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4, Parent = Frame
-                })
-                
-                local ColorBtn = renderObject("TextButton", {
-                    Size = UDim2.new(0, 16, 0, 10), Position = UDim2.new(1, -24, 0.5, -5),
-                    BackgroundColor3 = defaultColor or Color3.fromRGB(255, 255, 255),
-                    BorderSizePixel = 1, BorderColor3 = Color3.fromRGB(45, 45, 45), Text = "", AutoButtonColor = false, ZIndex = 4, Parent = Frame
-                })
-
-                -- Простая логика: при клике генерируем случайный цвет (Для полноценной палитры нужно создавать отдельное окно с HSV мапой)
-                ColorBtn.MouseButton1Click:Connect(function()
-                    local r, g, b = math.random(50, 255), math.random(50, 255), math.random(50, 255)
-                    local newColor = Color3.fromRGB(r, g, b)
-                    ColorBtn.BackgroundColor3 = newColor
-                    if callback then callback(newColor) end
-                end)
-            end
-
             return SectionObj
         end
-        
         return TabObj
     end
-
     return Window
 end
 
-_G.Library = Library
 return Library
